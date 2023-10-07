@@ -5,14 +5,14 @@ import com.example.online_farm.Entity.Product;
 import java.util.List;
 
 public class DataProductLimit {
-    private List<Product> products;
+    private List<ProductDTO> products;
     private Pagination pagination;
 
-    public List<Product> getProducts() {
+    public List<ProductDTO> getProducts() {
         return products;
     }
 
-    public void setProducts(List<Product> products) {
+    public void setProducts(List<ProductDTO> products) {
         this.products = products;
     }
 
