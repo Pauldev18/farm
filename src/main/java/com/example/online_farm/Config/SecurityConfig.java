@@ -49,6 +49,7 @@ public class SecurityConfig {
         return http.csrf().disable()
                 .authorizeHttpRequests()
                 .requestMatchers("/authenticate","/register","/refreshToken").permitAll()
+                .requestMatchers("/me").hasRole("ADMIN") // Chỉ cho ROLE_ADMIN truy cập "/me"
                 .and()
                 .authorizeHttpRequests().requestMatchers("/**")
                 .authenticated().and()

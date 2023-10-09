@@ -9,10 +9,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import java.security.Key;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 import static io.jsonwebtoken.security.Keys.secretKeyFor;
@@ -61,10 +58,12 @@ public class JwtService {
     }
 
 
-    public String generateToken(String userName){
-        Map<String,Object> claims=new HashMap<>();
-        return createToken(claims,userName);
+    public String generateToken(String userName, List<String> roles){
+        Map<String,Object> claims = new HashMap<>();
+        claims.put("roles", roles); // Đặt vai trò vào claims
+        return createToken(claims, userName);
     }
+
 
     private String createToken(Map<String, Object> claims, String userName) {
         return Jwts.builder()

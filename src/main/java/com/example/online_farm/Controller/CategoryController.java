@@ -44,57 +44,57 @@ public class CategoryController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthRegister> addUser(@RequestBody @Valid  AuthRequest user) {
-        try {
-            if (repository.existsByEmail(user.getUsername())) {
-                throw new EmailAlreadyExistsException("Email already exists");
-            }
-            User newUser =  service.addUser(user);
-
-            // Call the addUser method of your service to save the new user
-
-
-// Lưu newUser vào CSDL bằng service.addUser(newUser) hoặc bất kỳ phương thức nào bạn sử dụng để lưu người dùng mới.
-
-            // Tạo một đối tượng UserDetails
-            UserDetails userDetails = new UserInfoUserDetails(newUser);
-
-            // Tạo token cho người dùng mới đăng ký
-            String token = jwtService.generateToken(newUser.getEmail());
-
-            // Xây dựng AuthRegister
-            AuthRegister authResponse = new AuthRegister();
-            authResponse.setMessage("Đăng ký thành công");
-
-            UserRegister userData = new UserRegister();
-            userData.setAccessToken("Bearer " + token);
-            UserDataRegister userDataRegister = new UserDataRegister();
-            // Lấy thời gian hiện tại và chuyển đổi sang java.util.Date
-            userDataRegister.setCreatedAt(newUser.getCreatedAt());
-            userDataRegister.setUpdatedAt(newUser.getUpdatedAt());
-            userDataRegister.setEmail(newUser.getEmail());
-            userDataRegister.set_id(newUser.getId());
-
-            List<String> roleNames = newUser.getRoles().stream()
-                    .map(Role::getName)
-                    .collect(Collectors.toList());
-            userDataRegister.setRoles(roleNames);
-            userData.setUserDataRegister(userDataRegister);
-
-            authResponse.setUserRegister(userData);
-            return new ResponseEntity<>(authResponse, HttpStatus.CREATED);
-        } catch (EmailAlreadyExistsException e) {
-            AuthRegister authResponse = new AuthRegister();
-            authResponse.setMessage("Email already exists");
-            return new ResponseEntity<>(authResponse, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            String errorMessage = e.getMessage();
-            AuthRegister errorResponse = new AuthRegister();
-            errorResponse.setMessage(errorMessage); // Set an appropriate error message here
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
+//    @PostMapping("/register")
+//    public ResponseEntity<AuthRegister> addUser(@RequestBody @Valid  AuthRequest user) {
+//        try {
+//            if (repository.existsByEmail(user.getUsername())) {
+//                throw new EmailAlreadyExistsException("Email already exists");
+//            }
+//            User newUser =  service.addUser(user);
+//
+//            // Call the addUser method of your service to save the new user
+//
+//
+//// Lưu newUser vào CSDL bằng service.addUser(newUser) hoặc bất kỳ phương thức nào bạn sử dụng để lưu người dùng mới.
+//
+//            // Tạo một đối tượng UserDetails
+//            UserDetails userDetails = new UserInfoUserDetails(newUser);
+//
+//            // Tạo token cho người dùng mới đăng ký
+//            String token = jwtService.generateToken(newUser.getEmail());
+//
+//            // Xây dựng AuthRegister
+//            AuthRegister authResponse = new AuthRegister();
+//            authResponse.setMessage("Đăng ký thành công");
+//
+//            UserRegister userData = new UserRegister();
+//            userData.setAccessToken("Bearer " + token);
+//            UserDataRegister userDataRegister = new UserDataRegister();
+//            // Lấy thời gian hiện tại và chuyển đổi sang java.util.Date
+//            userDataRegister.setCreatedAt(newUser.getCreatedAt());
+//            userDataRegister.setUpdatedAt(newUser.getUpdatedAt());
+//            userDataRegister.setEmail(newUser.getEmail());
+//            userDataRegister.set_id(newUser.getId());
+//
+//            List<String> roleNames = newUser.getRoles().stream()
+//                    .map(Role::getName)
+//                    .collect(Collectors.toList());
+//            userDataRegister.setRoles(roleNames);
+//            userData.setUserDataRegister(userDataRegister);
+//
+//            authResponse.setUserRegister(userData);
+//            return new ResponseEntity<>(authResponse, HttpStatus.CREATED);
+//        } catch (EmailAlreadyExistsException e) {
+//            AuthRegister authResponse = new AuthRegister();
+//            authResponse.setMessage("Email already exists");
+//            return new ResponseEntity<>(authResponse, HttpStatus.BAD_REQUEST);
+//        } catch (Exception e) {
+//            String errorMessage = e.getMessage();
+//            AuthRegister errorResponse = new AuthRegister();
+//            errorResponse.setMessage(errorMessage); // Set an appropriate error message here
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+//        }
+//    }
 
 
 
@@ -131,7 +131,12 @@ public class CategoryController {
         try {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
             if (authentication.isAuthenticated()) {
-                String token = jwtService.generateToken(authRequest.getUsername());
+                Optional<User> user1 = repository.findByEmail(authRequest.getUsername());
+
+                List<String> roleNames1 = user1.get().getRoles().stream()
+                        .map(Role::getName)
+                        .collect(Collectors.toList());
+                String token = jwtService.generateToken(authRequest.getUsername(), roleNames1);
                 Object principal = authentication.getPrincipal();
                 UserDetails userDetails = (UserDetails) principal;
                 Optional<User> user = repository.findByEmail(userDetails.getUsername());
@@ -178,18 +183,18 @@ public class CategoryController {
     }
 
 
-    @PostMapping("/refreshToken")
-    public JwtResponse refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
-        return refreshTokenService.findByToken(refreshTokenRequest.getToken())
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(userInfo -> {
-                    String accessToken = jwtService.generateToken(userInfo.getEmail());
-                    return JwtResponse.builder()
-                            .accessToken(accessToken)
-                            .token(refreshTokenRequest.getToken())
-                            .build();
-                }).orElseThrow(() -> new RuntimeException(
-                        "Refresh token is not in database!"));
-    }
+//    @PostMapping("/refreshToken")
+//    public JwtResponse refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+//        return refreshTokenService.findByToken(refreshTokenRequest.getToken())
+//                .map(refreshTokenService::verifyExpiration)
+//                .map(RefreshToken::getUser)
+//                .map(userInfo -> {
+//                    String accessToken = jwtService.generateToken(userInfo.getEmail());
+//                    return JwtResponse.builder()
+//                            .accessToken(accessToken)
+//                            .token(refreshTokenRequest.getToken())
+//                            .build();
+//                }).orElseThrow(() -> new RuntimeException(
+//                        "Refresh token is not in database!"));
+//    }
 }
